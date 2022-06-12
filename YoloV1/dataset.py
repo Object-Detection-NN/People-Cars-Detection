@@ -4,8 +4,6 @@ from PIL import Image
 import os
 
 
-
-
 class COCODataset(torch.utils.data.Dataset):
     classes_str = {
         "car": 0,

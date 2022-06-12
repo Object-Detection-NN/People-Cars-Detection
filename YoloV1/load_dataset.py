@@ -6,14 +6,16 @@ import fiftyone.utils.torch as fot
 
 
 dataset_to_download_name = "coco-2017"
-save_downloaded_dataset = False
-downloaded_dataset_name = "coco-2017-train-car-person"
+save_downloaded_dataset = True
+downloaded_dataset_name = "coco-2017-train-2k"
 classes = ["car", "person"]
 split = "train"
 label_types = "detections"
 save_filtered_dataset = True
-filtered_dataset_name = "train_filtered_20k"
-max_samples = 20000
+filtered_dataset_name = "train_filtered_2k"
+max_samples = 2000
+
+display_dataset_name = filtered_dataset_name if split in ["train", "validation"] and save_filtered_dataset else downloaded_dataset_name
 
 
 def download_and_filter_dataset():
@@ -29,12 +31,14 @@ def download_and_filter_dataset():
 
     # Give the dataset a new name, and make it persistent so that you can
     # work with it in future sessions
-    dataset.name = downloaded_dataset_name
+    if downloaded_dataset_name not in fo.list_datasets():
+        dataset.name = downloaded_dataset_name
     dataset.persistent = save_downloaded_dataset
 
     ### print some data ###
     # dataset.compute_metadata()
     # print(dataset)
+    # print(dataset.first().filepath)
     # print(dataset.first().metadata)
     # print(dataset.first().ground_truth.detections)
 
@@ -57,20 +61,20 @@ def download_and_filter_dataset():
     view = dataset.match(F("ground_truth.detections").filter((bbox_area >= 0.1) & searched_label).length() > 0)
 
     # remove other class bboxes
-    for sample in dataset:
-        to_be_removed = []
-        for det in sample.ground_truth.detections:
-            if det.label not in classes:
-                to_be_removed.append(det)
-        for tbr in to_be_removed:
-            sample.ground_truth.detections.remove(tbr)
-        sample.save()
+    if split in ["train", "validation"]:
+        for sample in dataset:
+            to_be_removed = []
+            for det in sample.ground_truth.detections:
+                if det.label not in classes:
+                    to_be_removed.append(det)
+            for tbr in to_be_removed:
+                sample.ground_truth.detections.remove(tbr)
+            sample.save()
 
-
-    # create and save new filtered dataset
-    dataset_filtered = fo.Dataset(filtered_dataset_name)
-    dataset_filtered.add_samples(view)
-    dataset_filtered.persistent = save_downloaded_dataset
+        # create and save new filtered dataset
+        dataset_filtered = fo.Dataset(filtered_dataset_name)
+        dataset_filtered.add_samples(view)
+        dataset_filtered.persistent = save_downloaded_dataset
 
 
 def resize_images(dataset_name, size=(448, 448)):
@@ -83,9 +87,9 @@ if __name__ == '__main__':
     # download and filter dataset if dataset does not exist
     if not fo.dataset_exists(filtered_dataset_name):
         download_and_filter_dataset()
-        resize_images(filtered_dataset_name)
+        resize_images(display_dataset_name)
 
-    dataset_filtered = fo.load_dataset(filtered_dataset_name)
+    dataset_filtered = fo.load_dataset(display_dataset_name)
 
     # Visualize the dataset in the App
     session = fo.launch_app(dataset_filtered)
