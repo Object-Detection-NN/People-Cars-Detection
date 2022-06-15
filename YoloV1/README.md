@@ -1,6 +1,11 @@
 # People-Cars-Detection Yolo V1
 
 
+# Built with
+#### 1. [PyCharm](https://www.jetbrains.com/pycharm/)
+#### 2. [PyTorch](https://pytorch.org/)
+#### 3. [FiftyOne](https://voxel51.com/docs/fiftyone/)
+
 # Getting started
 1. Clone repo
 ```
